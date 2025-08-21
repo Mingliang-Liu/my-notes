@@ -5,6 +5,7 @@ sudo apt install nfs-kernel-server
 
 sudo vim /etc/exports
 /path/to/hard/drive *(rw,sync,no_subtree_check)
+/path/to/hard/drive  *(rw,sync,all_squash,anonuid=1000,anongid=1000)
 其中，/path/to/hard/drive 是你要共享的硬盘的路径。* 表示允许所有主机访问。可以根据需要调整权限和其他选项。
 
 sudo systemctl restart nfs-kernel-server
