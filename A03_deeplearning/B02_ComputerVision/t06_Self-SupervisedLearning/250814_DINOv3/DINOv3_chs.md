@@ -555,13 +555,19 @@ DINOv3 显著超越了之前所有的自监督骨干网络，在 ImageNet-R 上�
 为了构建一个将 DINOv3 特征映射到语义类别的解码器，我们结合了 ViTAdapter（Chen 等，2022）和 Mask2Former（Cheng 等，2022），类似于先前的工作（Wang 等，2022b；2023b；a）。但在我们的设置中，DINOv3 主干网络在整个训练过程中保持冻结。为避免干扰主干网络的特征表示，我们进一步修改了原始 ViT-Adapter 架构，移除了其中的 injector 组件。相比基线模型，我们还将嵌入维度从 1024 提升至 2048，以更好地处理 DINOv3 主干输出的 4096 维特征。训练流程分为三阶段：首先在 COCO-Stuff 上预训练 80,000 次迭代，接着在 Hypersim 上训练 10,000 次迭代，最后在 ADE20k 的训练集上训练 20,000 次迭代，并在验证集上报告结果。所有训练均在输入分辨率 896 下进行。在推理阶段，我们考虑两种设置：单尺度（simple），即以训练分辨率前向传播图像；多尺度（multi-scale，即 TTA），即对原始训练分辨率的 0.9 倍到 1.1 倍范围内的多个图像比例的预测结果进行平均。更多实验细节参见附录 D.10。
 
 **表 11：ADE20k 上语义分割任务的最先进系统对比。** 我们在单尺度或多种尺度（分别为 Simple 和 TTA）设置下评估模型。遵循常见做法，本实验在 896 分辨率下运行，并报告 mIoU 分数。BEIT3、ONE-PEACE 和 DINOv3 均采用 Mask2Former 与 ViT-Adapter 架构，解码器参数已包含两者。我们在表 24 中报告了在其他数据集上的结果。
+<table>
+<tr><td></td><td></td><td colspan="3">Parameters</td><td colspan="2">mIoU</td></tr>
+<tr><td>Model</td><td>FT</td><td>Encoder</td><td>Decoder</td><td>Trainable</td><td>Simple</td><td>TTA</td></tr>
+<tr><td>BEIT3</td><td>🔥</td><td>1.0B</td><td>550M</td><td>1.6B</td><td>62.0</td><td>62.8</td></tr>
+<tr><td>InternImage-H</td><td>🔥</td><td>1.1B</td><td>230M</td><td>1.3B</td><td>62.5</td><td>62.9</td></tr>
+<tr><td>ONE-PEACE</td><td>🔥</td><td>1.5B</td><td>710M</td><td>2.2B</td><td>62.0</td><td>63.0</td></tr>
+<tr><td>DINOv3</td><td>❄️</td><td>7B</td><td>927M</td><td>927M</td><td>62.6</td><td>63.0</td></tr>
+</table>
 
 **结果（表 11）**  
 我们将模型性能与多个最先进的基线进行了比较，包括 BEIT-3（Wang 等，2022b）、InternImage-H（Wang 等，2023b）和 ONE-PEACE（Wang 等，2023a），并在表 24 中报告了在其他数据集上的结果。基于冻结 DINOv3 主干的分割模型达到了最先进的性能，与 ONE-PEACE 持平（63.0 mIoU）。同时，在 COCO-Stuff（Caesar 等，2018）和 VOC 2012（Everingham 等，2012）数据集上也优于所有先前模型。由于语义分割需要精确的逐像素预测，视觉 Transformer 主干网络面临根本性挑战：其 16 像素宽的输入 patch 导致预测粒度较粗，因此催生了如 ViT-Adapter 等解决方案。另一方面，我们已证明即使在高达 4096 分辨率的情况下（参见图 3 和图 4），也能获得高质量的特征图——对应宽度达 512 token 的密集特征图。我们希望未来的工作能充分利用这些高分辨率特征，在无需依赖 ViT-Adapter 与 Mask2Former 这类重型解码器的前提下，实现最先进的性能。
 
----
-
-### 6.3.3 单目深度估计
+#### 6.3.3 单目深度估计
 
 接下来，我们尝试构建一个单目深度估计系统。为此，我们采用了 Depth Anything V2（DAv2）（Yang 等，2024b）的最新先进方法框架。DAv2 的关键创新在于使用大量带有真实深度标注的合成图像进行训练。至关重要的是，该方法依赖 DINOv2 作为特征提取器，能够有效弥合仿真到真实场景之间的差距，而其他视觉主干（如 SAM（Kirillov 等，2023））则不具备这一能力（Yang 等，2024b）。因此，我们在 DAv2 的流程中将 DINOv2 替换为 DINOv3，以检验是否可以获得类似甚至更优的结果。
 
@@ -569,6 +575,254 @@ DINOv3 显著超越了之前所有的自监督骨干网络，在 ImageNet-R 上�
 与 DAv2 类似，我们使用 Dense Prediction Transformer（DPT）（Ranftl 等，2021）来预测像素级深度图，输入为 DINOv3 四个等间距层的特征。我们在 DAv2 的合成数据集上使用其提出的损失函数进行训练，并将训练分辨率提升至 $1024 \times 768$，以充分发挥 DINOv3 高分辨率处理能力的优势。与 DAv2 不同的是，我们保持主干网络冻结，而非进行微调，从而测试 DINOv3 的“开箱即用”能力。我们还发现，扩大 DPT 头部结构有助于更好地利用 DINOv3 7B 版本输出的更大特征。具体细节见附录 D.11。
 
 **数据集与指标**  
-我们在五个真实世界数据集上评估模型性能：NYUv2（Silberman 等，2012）、KITTI（Geiger 等，2013）、ETH3D（Schöps 等，2017）、ScanNet（来自 Ke 等（2025））和 DIODE（Vasiljevic 等，2019），评估设置为零样本尺度不变深度估计（zero-shot scale-invariant depth），类似于 Ranftl 等（2020）和 Ke 等（2025）的方法。
+我们在5个真实世界数据集上对模型进行评估：NYUv2 (Silberman 等, 2012)、KITTI (Geiger 等, 2013)、ETH3D (Schöps 等, 2017)、ScanNet（来自 Ke 等 (2025)）和 DIODE (Vasiljevic 等, 2019)，采用与 Ranftl 等 (2020)；Ke 等 (2025)；Yang 等 (2024b) 类似的零样本尺度不变深度估计设置。我们报告了标准指标：绝对相对误差（ARel，越低越好）和 $\delta_1$（越高越好）。有关这些指标的详细描述，请参见 Yang 等 (2024a)。
 
-**表 12：相对单目深度估计任务的最先进系统对比。** 通过将 DINOv3 与 Depth Anything V2（Yang 等，2024b）结合，我们获得了相对深度估计任务上的最先进模型。
+表 12：相对单目深度估计任务的最先进系统对比。通过将 DINOv3 与 Depth Anything V2（Yang 等，2024b）结合，我们获得了相对深度估计任务上的最先进模型。
+<table>
+<tr><td></td><td></td><td colspan="2">NYUv2</td><td colspan="2">KITTI</td><td colspan="2">ETH3D</td><td colspan="2">ScanNet</td><td colspan="2">DIODE</td></tr>
+<tr><td>Method</td><td>FT</td><td>ARel↓</td><td>δ1↑</td><td>ARel↓</td><td>δ1↑</td><td>ARel↓</td><td>δ1↑</td><td>ARel↓</td><td>δ1↑</td><td>ARel↓</td><td>81↑</td></tr>
+<tr><td>MiDaS</td><td>🔥</td><td>11.1</td><td>88.5</td><td>23.6</td><td>63.0</td><td>18.4</td><td>75.2</td><td>12.1</td><td>84.6</td><td>33.2</td><td>71.5</td></tr>
+<tr><td>LeReS</td><td>🔥</td><td>9.0</td><td>91.6</td><td>14.9</td><td>78.4</td><td>17.1</td><td>77.7</td><td>9.1</td><td>91.7</td><td>27.1</td><td>76.6</td></tr>
+<tr><td> Omnidata</td><td>🔥</td><td>7.4</td><td>94.5</td><td>14.9</td><td>83.5</td><td>16.6</td><td>77.8</td><td>7.5</td><td>93.6</td><td>33.9</td><td>74.2</td></tr>
+<tr><td>DPT</td><td>🔥</td><td>9.8</td><td>90.3</td><td>10.0</td><td>90.1</td><td>7.8</td><td>94.6</td><td>8.2</td><td>93.4</td><td>18.2</td><td>75.8</td></tr>
+<tr><td>Marigold</td><td>🔥</td><td>5.5</td><td>96.4</td><td>9.9</td><td>91.6</td><td>6.5</td><td>96.0</td><td>6.4</td><td>95.1</td><td>30.8</td><td>77.3</td></tr>
+<tr><td>DAv2 (ViT-g)</td><td>🔥</td><td>4.4</td><td>97.9</td><td>7.5</td><td>94.7</td><td>13.1</td><td>86.5</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>DINOv3</td><td>❄️</td><td>4.3</td><td>98.0</td><td>7.3</td><td>96.7</td><td>5.4</td><td>97.5</td><td>4.4</td><td>98.1</td><td>25.6</td><td>82.2</td></tr>
+</table>
+
+
+
+**结果（表12）** 我们与当前最先进的相对深度估计方法进行了比较：MiDaS (Ranftl 等, 2020)、LeReS (Yin 等, 2021)、Omnidata (Eftekhar 等, 2021)、DPT (Ranftl 等, 2021)、集成版本的 Marigold (Ke 等, 2025) 以及 DAv2。我们的深度估计模型在所有数据集上均达到了新的最先进水平，仅在 DIODE 数据集上的 ARel 指标略逊于 DPT。值得注意的是，这一性能是在使用冻结主干网络（frozen backbone）的情况下实现的，而所有其他基线方法都需要对主干网络进行微调以适应深度估计任务。此外，这也验证了 DINOv3 继承了 DINOv2 强大的“仿真到现实”（sim-to-real）迁移能力，这一理想特性为下游任务使用合成生成数据进行训练提供了可能性。
+
+#### 6.3.4 基于 DINOv3 的视觉几何约束的 Transformer（Visual Geometry Grounded Transformer）
+
+最后，我们考察了最新的视觉几何约束的 Transformer（VGGT）（Wang 等, 2025）在3D理解方面的表现。VGGT 在大量带有3D标注的数据上训练，能够在一次前向传播中估计场景的所有关键3D属性，例如相机内参和外参、点云图或深度图。通过一个简单且统一的流程，VGGT 在多个3D任务上达到了最先进的性能，同时比专用方法更高效，标志着3D理解领域的一项重大进展。
+
+**实现细节**  
+VGGT 使用基于 DINOv2 预训练的主干网络来提取场景不同视角的特征表示，然后通过变换器（transformer）进行融合。在此工作中，我们仅将原始 VGGT 中的 DINOv2 主干网络替换为 DINOv3，并使用我们的 ViT-L 变体（见第7节），以匹配原作中 DINOv2 ViT-L/14 的结构。我们沿用 VGGT 的完整训练流程，包括对图像主干网络的微调。为了适配 DINOv3 的 patch 大小为16的设置，我们将输入图像分辨率从 $518 \times 518$ 调整为 $592 \times 592$，以确保结果与原始 VGGT 具有可比性。此外，我们还采用了一组少量的超参数调整，详见附录 D.12。
+
+**数据集与指标**  
+按照 Wang 等 (2025) 的设定，我们在以下任务和数据集上进行评估：  
+- 相机位姿估计：Re10K (Zhou 等, 2018) 和 CO3Dv2 (Reizenstein 等, 2021) 数据集；  
+- 密集多视角估计：DTU (Jensen 等, 2014)；  
+- 两视角匹配：ScanNet-1500 (Dai 等, 2017)。  
+
+对于相机位姿估计和两视角匹配任务，我们报告标准的曲线下面积（AUC）指标。对于多视角估计任务，我们报告预测到真实值之间的最小L2距离作为“精度”（Accuracy），真实值到预测之间的最小L2距离作为“完整性”（Completeness），以及二者的平均值作为“总体表现”（Overall）。具体方法和评估细节请参考 Wang 等 (2025)。
+
+**表13：** 视觉几何约束的 Transformer（VGGT）（Wang 等, 2025）的3D理解。仅通过将 VGGT 流程中的图像特征提取器从 DINOv2 替换为 DINOv3 ViT-L，我们就在多种3D几何任务上取得了最先进结果。我们复现了 Wang 等 (2025) 的基线结果。表中也列出了使用真实相机参数的方法（标有 ∗）。相机位姿估计的结果以 AUC@30 形式报告。  
+
+(a) Camera pose estimation.   
+<table>
+<tr><td>Method</td><td>Re10K</td><td>CO3Dv2</td></tr>
+<tr><td>DUSt3R</td><td>67.7</td><td>76.7</td></tr>
+<tr><td>MASt3R</td><td>76.4</td><td>81.8</td></tr>
+<tr><td>VG GSfM v2</td><td>78.9</td><td>83.4</td></tr>
+<tr><td>CUT3R</td><td>75.3</td><td>82.8</td></tr>
+<tr><td>FLARE</td><td>78.8</td><td>83.3</td></tr>
+<tr><td>VGGT</td><td>85.3</td><td>88.2</td></tr>
+<tr><td>DINOv3</td><td>86.3</td><td>89.6</td></tr>
+</table>
+
+(b) Multi-view estimation on DTU.   
+<table>
+<tr><td>Method</td><td>Acc.↓</td><td>Comp.↓</td><td>Overall↓</td></tr>
+<tr><td>Gipuma*</td><td>0.283</td><td>0.873</td><td>0.578</td></tr>
+<tr><td>CIDER*</td><td>0.417</td><td>0.437</td><td>0.427</td></tr>
+<tr><td>MASt3R*</td><td>0.403</td><td>0.344</td><td>0.374</td></tr>
+<tr><td>GeoMVSNet*</td><td>0.331</td><td>0.259</td><td>0.295</td></tr>
+<tr><td>DUSt3R</td><td>2.677</td><td>0.805</td><td>1.741</td></tr>
+<tr><td>VGGT</td><td>0.389</td><td>0.374</td><td>0.382</td></tr>
+<tr><td>DINOv3</td><td>0.375</td><td>0.361</td><td>0.368</td></tr>
+</table>
+
+(c) View matching on ScanNet-1500.   
+<table>
+<tr><td>Method</td><td>AUC@5</td><td>AUC@10</td></tr>
+<tr><td>SuperGlue</td><td>16.2</td><td>33.8</td></tr>
+<tr><td>LoFTR</td><td>22.1</td><td>40.8</td></tr>
+<tr><td>DKM</td><td>29.4</td><td>50.7</td></tr>
+<tr><td>CasMTR</td><td>27.1</td><td>47.0</td></tr>
+<tr><td>Roma</td><td>31.8</td><td>53.4</td></tr>
+<tr><td>VGGT</td><td>33.9</td><td>55.2</td></tr>
+<tr><td>DINOv3</td><td>35.2</td><td>56.1</td></tr>
+</table>
+
+
+
+**结果（表13）**  
+我们发现，使用 DINOv3 替换主干网络后，VGGT 在三项任务上均进一步超越了其自身先前设定的最先进水平——采用 DINOv3 带来了显著且一致的性能提升。这一点尤为令人鼓舞，因为我们仅对 DINOv3 进行了极少的调参优化。这些任务涵盖了不同层次的视觉理解能力：  
+- 高层次的场景内容抽象（相机位姿估计），  
+- 密集的几何预测（多视角深度估计），  
+- 细粒度的像素级对应关系（视角匹配）。  
+
+结合此前在对应点估计（第6.1.3节）和深度估计（第6.3.3节）上的结果，我们认为这进一步提供了实证证据，表明 DINOv3 非常适合作为3D任务的基础模型。此外，我们预期若使用更大的 DINOv3 7B 模型，性能还将进一步提升。
+
+## 7 对DINOv3模型全系列的评估
+
+<table>
+<tr><td colspan="2"></td><td colspan="2">Inference GFLOPs</td></tr>
+<tr><td>Model</td><td>#Params</td><td>Res. 256</td><td>Res. 512</td></tr>
+<tr><td>CNX-Tiny</td><td>29M</td><td>5</td><td>20</td></tr>
+<tr><td>CNX-Small</td><td>50M</td><td>11</td><td>46</td></tr>
+<tr><td>CNX-Base</td><td>89M</td><td>20</td><td>81</td></tr>
+<tr><td>CNX-Large</td><td>198M</td><td>38</td><td>152</td></tr>
+<tr><td>ViT-S</td><td>21M</td><td>12</td><td>63</td></tr>
+<tr><td>ViT-S+</td><td>29M</td><td>16</td><td>79</td></tr>
+<tr><td>ViT-B</td><td>86M</td><td>47</td><td>216</td></tr>
+<tr><td>ViT-L</td><td>300M</td><td>163</td><td>721</td></tr>
+<tr><td>ViT-H+</td><td>840M</td><td>450</td><td>1903</td></tr>
+<tr><td>ViT-7B</td><td>6716M</td><td>3550</td><td>14515</td></tr>
+</table>
+(a) DINOv3模型家族
+
+![](images/fac2ca74d130f1f54906361d01c089163566d2d401bf9bdc82c8e3a6a2a74994.jpg)  
+(b) ViT-H+ v.s. ViT-7B.  
+图16：（a）蒸馏模型特性的展示。CNX代表ConvNeXT。我们列出了每个模型在256×256和512×512尺寸图像上的参数数量以及GFLOPs估算值。（b）我们将DINOv3 ViT-H+与其7B规模的教师模型进行比较；尽管ViT-H+的参数数量几乎减少了10倍，但其性能仍接近DINOv3 7B。
+
+在本节中，我们对从70亿参数模型（见第5.2节）蒸馏而来的模型系列进行了定量评估。该系列包括基于Vision Transformer（ViT）和ConvNeXt（CNX）架构的多种变体。我们在图16a中详细列出了所有模型的参数数量和推理FLOPs。这些模型覆盖了广泛的计算预算，能够满足不同用户和部署场景的需求。我们对所有ViT（第7.1节）和ConvNeXt变体进行了全面评估，以衡量它们在各种任务上的性能表现。
+
+图2展示了DINOv3模型系列与其他模型集合的总体对比。在密集预测任务上，DINOv3系列显著优于所有其他模型，其中包括从监督式主干网络蒸馏而来的专用模型（如AM-RADIO和PEspatial）。同时，我们的模型在分类任务上也达到了相当的性能，使其在不同计算预算下均成为最优选择。
+
+在第7.1节中，我们详细介绍了ViT模型，并将其与其他开源替代方案进行了比较。接着在第7.2节中，我们讨论了ConvNeXt模型。最后，根据第5.3节的方法，我们训练了一个与ViT-L模型输出对齐的文本编码器。该模型的多模态对齐结果将在第7.3节中展示。
+
+### 7.1 适用于各种应用场景的视觉Transformer
+
+我们的ViT系列涵盖了从紧凑型ViT-S到拥有8.4亿参数的大型ViT H+模型在内的多种架构。前者专为在笔记本电脑等资源受限设备上高效运行为设计，而后者则为要求更高的应用提供了最先进的性能。我们将我们的ViT模型与同规模下表现最佳的开源图像编码器进行比较，包括DINOv2（Oquab等，2024）、SigLIP 2（Tschannen等，2025）和Perception Encoder（Bolya等，2025）。为了确保公平比较，我们统一了各模型的输入序列长度。具体而言，对于采用16大小图像块（patch size）的模型，我们输入分辨率为$512 \times 512$的图像；而当模型使用14大小图像块时，则输入$448 \times 448$的图像。
+
+我们的实证研究表明，DINOv3模型在密集预测任务中始终优于同类模型。最显著的是，在ADE20k基准测试中，DINOv3的ViT-L模型相比最佳竞争模型DINOv2，mIoU指标提升了超过6个百分点。ViT-B变体相比次优竞争模型也取得了约3个百分点的mIoU提升。这些显著的改进凸显了DINOv3局部特征在捕捉细粒度空间细节方面的有效性。此外，在深度估计任务上的评估也显示出DINOv3持续优于其他竞争方法的表现。这凸显了 DINOv3 系列模型在各类密集视觉任务中的广泛适用性。重要的是，我们的模型在全局识别基准（如 ObjectNet 和 ImageNet-1k）上也取得了具有竞争力的结果。这表明，密集任务性能的提升并未以牺牲全局任务的准确性为代价。这种平衡性证实了 DINOv3 模型提供了一种稳健且全面的解决方案，在密集和全局视觉任务上均表现出色，无需折衷。
+
+另外，我们也希望验证我们蒸馏得到的最大模型是否完整地捕获了教师模型的所有信息。为此，我们将最大的 ViT-H+ 学生模型与参数量达 70 亿（7B）的教师模型进行了对比。如图 16b 所示，最大的学生模型在性能上与比其大 8 倍的 ViT-7B 教师模型相当。这一结果不仅验证了我们蒸馏方法的有效性，也表明在高质量教师模型的引导下，较小的学生模型能够学习到与教师相当的性能水平。这一发现进一步强化了我们的信念：训练超大规模模型能够惠及更广泛的社区，因为大模型的强大能力可以成功地蒸馏到更高效、更小的模型中，且几乎不会损失性能质量。
+
+![](images/9365f2c970e27d84cc69c8a613124740b65c4a307b0ff892ea87c384b47facf6.jpg)  
+图 17：DINOv3 ViT 系列模型在多种分辨率下的特征稳定性。从上到下分别为：ViT-S、S+、B、L、H+。我们在不同分辨率下对同一图像进行推理，然后对在 $1792 \times 1024$ 分辨率图像（对应 $112 \times 64$ 个图像 token）上提取的特征进行主成分分析（PCA），并将所有分辨率下的特征投影到第 5–7 个主成分上，映射至 RGB 空间进行可视化。尽管所有模型在各种分辨率下均可正常运行，但我们观察到特征在很大范围的分辨率下保持一致，仅在极端分辨率时才开始漂移：例如，ViT-S+ 的特征在输入分辨率从 $896 \times 512$ 到 $3584 \times 2048$ 之间均保持稳定；ViT-L 直到最大分辨率 $7168 \times 4096$ 时才刚开始出现漂移；而 ViT-H+ 在整个测试范围内都保持高度稳定。
+
+### 7.2 面向资源受限环境的高效 ConvNeXt 模型
+
+在本节中，我们评估了从 7B 参数教师模型蒸馏而来的 ConvNeXt（CNX）模型的质量。ConvNeXt 模型在计算 FLOPs 方面效率极高，非常适合部署在针对卷积运算优化的设备上。此外，Transformer 模型通常难以有效进行量化（Bondarenko 等，2021），而卷积神经网络的量化则已有广泛研究和成熟实践。我们对 T、S、B 和 L 四种尺寸的 CNX 架构进行了蒸馏（见图 16a），并将其与原始 ConvNeXt 模型（Liu 等，2022）进行比较。这些基线模型在 ImageNet-1k 上表现优异，因为它们使用了 ImageNet-22k 的标签以监督方式训练，因此构成了强有力的对比基准。在本实验中，我们报告了全局任务在输入分辨率 256 和 512 下的表现，以及 ADE20k 数据集在分辨率 512 下、NYU 数据集在分辨率 640 下的结果。
+
+表 15：我们蒸馏得到的 DINOv3 ConvNeXt 模型的评估结果。我们将我们的模型与现成的、在 ImageNet-22k 上以监督方式训练的 ConvNeXt 模型（Liu 等，2022）进行了比较。对于全局任务，我们提供了输入分辨率为 256 和 512 的结果，因为我们发现监督训练的模型在 512 分辨率下性能显著下降。 
+<table>
+<tr><td rowspan="3">Size</td><td rowspan="3">Model</td><td colspan="6">Global Tasks</td><td colspan="2">Dense Tasks</td></tr>
+<tr><td colspan="2">IN-ReAL</td><td colspan="2">IN-R</td><td colspan="2">Obj.</td><td rowspan="2">ADE20k</td><td rowspan="2">NYU↓</td></tr>
+<tr><td>256</td><td>512</td><td>256</td><td>512</td><td>256</td><td>512</td></tr>
+<tr><td>T</td><td>Sup.</td><td>87.3</td><td>83.0</td><td>45.0</td><td>33.0</td><td>44.5</td><td>27.1</td><td>24.8</td><td>0.666</td></tr>
+<tr><td>T</td><td>DINOv3</td><td>86.6</td><td>87.7</td><td>73.7</td><td>74.1</td><td>52.6</td><td>58.7</td><td>42.7</td><td>0.448</td></tr>
+<tr><td>s</td><td>Sup.</td><td>88.9</td><td>86.8</td><td>52.8</td><td>39.1</td><td>50.8</td><td>40.0</td><td>22.6</td><td>0.630</td></tr>
+<tr><td>S</td><td>DINOv3</td><td>87.9</td><td>88.7</td><td>73.7</td><td>74.1</td><td>52.6</td><td>58.7</td><td>44.8</td><td>0.432</td></tr>
+<tr><td>B</td><td>Sup.</td><td>89.3</td><td>87.8</td><td>57.3</td><td>46.2</td><td>53.6</td><td>46.5</td><td>26.5</td><td>0.596</td></tr>
+<tr><td>B</td><td>DINOv3</td><td>88.5</td><td>89.2</td><td>77.2</td><td>78.2</td><td>56.2</td><td>61.3</td><td>46.3</td><td>0.420</td></tr>
+<tr><td>L</td><td>Sup.</td><td>89.6</td><td>88.1</td><td>58.4</td><td>46.6</td><td>55.0</td><td>47.7</td><td>33.3</td><td>0.567</td></tr>
+<tr><td>L</td><td>DINOv3</td><td>88.9</td><td>89.4</td><td>81.3</td><td>82.4</td><td>59.3</td><td>65.2</td><td>47.8</td><td>0.403</td></tr>
+</table>
+
+**结果（表15）**  
+我们发现，在分布内图像分类任务中，我们的模型在256分辨率下略逊于监督模型（例如CNX-T在ImageNet-Real上的表现为-0.7）。但在512分辨率下，这一趋势发生逆转：监督式ConvNeXt模型性能显著下降，而我们的模型却能随输入分辨率提升而持续优化。在分布外分类任务（IN-R、ObjectNet）上，两种模型家族在所有规模上都存在显著差距——这证明了DINOv3 CNX模型卓越的鲁棒性。此外，DINOv3模型在密集预测任务上实现大幅提升：CNX-T模型的mIoU指标提升17.9（42.7对比24.8），CNX-L模型提升14.5（47.8对比33.3）。高性能与计算效率的结合，使蒸馏后的ConvNeXt模型在资源受限的实际应用场景中尤为突出。特别值得关注的是，将ViT-7B模型的知识蒸馏到更小的ConvNeXt架构中具有突破性意义——前者基于带CLS标记的Transformer模块，后者采用无CLS标记的卷积操作，这种跨架构知识迁移绝非易事。该成果凸显了我们蒸馏流程的多功能性与有效性。
+
+### 7.3 基于DINOv3的dino.txt零样本推理
+
+如第5.3节所述，我们参照dino.txt（Jose等人，2025年）方案训练文本编码器，将蒸馏后的DINOv3 ViT-L模型的CLS标记与输出图像块与文本对齐。我们在标准基准测试中从全局和局部两个层面评估对齐质量：采用CLIP协议（Radford等人，2021年）在ImageNet-1k、ImageNet-Adversarial、ImageNet-Rendition和ObjectNet基准上报告零样本分类准确率；在COCO2017数据集（Tsung-Yi等人，2017年）上评估图文检索任务，并报告图像到文本（I→T）和文本到图像（T→I）的Recall@1指标；通过ADE20k和Cityscapes通用基准评估开放词汇分割任务中的图像块对齐质量，以mIoU指标衡量。
+
+表16：我们的文本对齐DINOv3 ViT-L模型与前沿技术对比。该模型在保持全局对齐任务竞争力的同时，实现了优异的密集对齐性能。所有对比模型均为ViT-L规模且采用相同的576序列长度。
+<table>
+<tr><td></td><td colspan="4">Classification</td><td colspan="2">Retrieval</td><td colspan="2">Segmentation</td></tr>
+<tr><td>Method</td><td>IN1k</td><td>A</td><td>R</td><td>Obj.</td><td>I→T</td><td>T→I</td><td>ADE20k</td><td>Cityscapes</td></tr>
+<tr><td>CLIP</td><td>76.6</td><td>77.5</td><td>89.0</td><td>72.3</td><td>57.9</td><td>37.1</td><td>6.0</td><td>11.5</td></tr>
+<tr><td>EVA-02-CLIP</td><td>80.4</td><td>82.9</td><td>93.2</td><td>78.5</td><td>64.1</td><td>47.9</td><td>10.9</td><td>14.1</td></tr>
+<tr><td>dino.txt</td><td>81.6</td><td>83.2</td><td>88.8</td><td>74.5</td><td>62.5</td><td>45.0</td><td>19.2</td><td>27.4</td></tr>
+<tr><td>SigLIP 2</td><td>83.1</td><td>84.3</td><td>95.7</td><td>84.4</td><td>71.4</td><td>55.3</td><td>10.8</td><td>16.3</td></tr>
+<tr><td>PE</td><td>83.5</td><td>89.0</td><td>95.2</td><td>84.7</td><td>75.9</td><td>57.1</td><td>17.6</td><td>21.4</td></tr>
+<tr><td>DINOv3 dino .txt</td><td>82.3</td><td>85.4</td><td>93.0</td><td>80.5</td><td>63.7</td><td>45.6</td><td>24.7</td><td>36.9</td></tr>
+</table>
+
+**结果（表16）**  
+我们将文本对齐的DINOv3 ViT-L模型与同规模竞品进行比较：相较于基于DINOv2进行文本对齐的Jose等人（2025年）方案，DINOv3在所有基准测试中均取得显著提升。在全局对齐任务中，我们的模型优于原始CLIP（Radford等人，2021年）和EVA-02-CLIP（Sun等人，2023年）等强基线，但略逊于SigLIP2（Tschannen等人，2025年）和Perception Encoder（Bolya等人，2025年）。在密集对齐任务中，得益于DINOv3清晰的特征图谱，我们的文本对齐模型在ADE20K和Cityscapes两个挑战性基准上展现出卓越性能。
+
+## 8 DINOv3在地理空间数据(Geospatial Data)上的应用
+
+我们的自监督学习方法具有通用性，可应用于任何图像领域。在本节中，我们通过构建一个用于卫星图像的 DINOv3 7B 模型来展示这种普适性。卫星图像与 DINOv3 最初开发所使用的网络图像在特性上存在显著差异（例如物体纹理、传感器噪声和视角聚焦等）。
+
+### 8.1 预训练数据与基准测试
+
+我们的卫星图像 DINOv3 7B 模型在 SAT-493M 数据集上进行预训练，该数据集包含从 Maxar 提供的 RGB 正射影像中随机采样的 4.93 亿张 $512 \times 512$ 图像，分辨率为 0.6 米。我们使用了与网络图像版 DINOv3 7B 模型完全相同的超参数设置，仅对适用于卫星图像的 RGB 均值和标准差归一化参数进行了调整，并略微修改了训练时长。类似于网络图像模型，我们针对卫星图像模型的训练流程包括：10万次迭代的初始预训练（使用 $256 \times 256$ 的全局裁剪图像），随后是 1 万次迭代的 Gram 正则化阶段，最后以 8 千步的高分辨率微调（分辨率提升至 512）。同样地，我们将这个 70 亿参数的卫星模型蒸馏为一个更轻量级的 ViT-Large 模型，以便在资源受限的场景下更易部署和使用。
+
+我们在多个地球观测任务上评估了 DINOv3 卫星模型与网络图像模型的性能。在全球树冠高度预测任务中，我们采用了附录 D.13 中描述的 Satlidar 数据集，该数据集包含一百万张 $512 \times 512$ 的图像，并配有 LiDAR 真实标签，按 8:1:1 的比例划分为训练集、验证集和测试集。该划分包含了 Tolan 等人（2024）所使用的 Neon 和圣保罗（São Paulo）数据集。对于国家级尺度的树冠高度预测，我们在 Open-Canopy 数据集上进行评估（Fogel 等，2025），该数据集结合了 SPOT 6-7 卫星影像和覆盖法国境内约 $87,000~\mathrm{km^2}$ 的航空 LiDAR 数据。由于该数据集中的图像包含四个通道（包括额外的红外 IR 通道），我们通过将 patch embedding 模块权重中三个通道的平均值复制并作为第四个通道的权重，从而适配我们的主干网络结构。我们训练了一个 DPT 解码器，输入为将原始图像裁剪并调整至 $1667 \times 1667$ 大小后裁剪 $512 \times 512$ 的图像，以匹配 Maxar 影像的地面采样分辨率。
+
+语义地理空间任务方面，我们采用 GEO-Bench 基准（Lacoste 等，2023），该基准包含六个分类任务和六个分割任务，涵盖多种空间分辨率和光学波段。GEO-Bench 的任务类型多样，包括屋顶光伏系统的检测、局部气候区分类、毁林驱动因素分析以及树冠检测等。对于高分辨率语义任务，我们还考虑了以下数据集：土地覆盖分割数据集 LoveDA（Wang 等，2022a）、对象分割数据集 iSAID（Zamir 等，2019）以及水平目标检测数据集 DIOR（Li 等，2020）。
+
+### 8.2 树冠高度估计
+
+从卫星图像中估计树冠高度是一项具有挑战性的回归任务，需要在存在坡度变化、观测几何、太阳角度、大气散射以及量化伪影等随机干扰的情况下，精确恢复连续的空间结构。这项任务对于全球碳监测以及森林与农业管理至关重要（Harris 等，2021）。我们沿用 Tolan 等人（2024）的方法——这是首个利用在卫星图像上训练的自监督学习主干网络完成该任务的研究——在 SatLidar1M 训练集上，在冻结的 DINOv3 主干网络之上训练一个 DPT 解码头，然后在 SatLidar1M 的验证集（i.i.d. 样本）以及分布外（out-of-distribution, OOD）的测试集（包括 SatLidar1M 测试集、Neon 和 São Paulo 数据集）上进行评估。此外，我们也对 Open-Canopy 数据集进行了训练与评估。
+
+**表 17：不同主干网络在高分辨率树冠高度预测任务上的性能评估。** 所有模型均使用 DPT 解码器。结果分为两类实验：一类是在 SatLidar 数据集上训练解码器，并在 i.i.d. 验证集（SatLidar Val）及 OOD 测试集（SatLidar Test、Neon 和 São Paulo）上评估；另一类是在 Open-Canopy 数据集上同时进行训练与评估。我们列出了平均绝对误差（MAE）以及 Tolan 等人（2024）提出的区块 $R^2$ 指标。为完整性起见，我们还额外评估了 Tolan 等人（2024）原始工作中在 Neon 数据集上训练的解码器（标记为 $^*$）。
+<table>
+<tr><td rowspan="3">Method</td><td rowspan="3">Arch.</td><td colspan="8">Satidar</td><td rowspan="2">Open Canopy</td></tr>
+<tr><td colspan="2">SatLidar Val</td><td colspan="2">SatLidar Test</td><td colspan="2">Neon Test</td><td colspan="2">Sao Paulo</td></tr>
+<tr><td>MAE↓</td><td>R²↑</td><td>MAE↓</td><td>R²↑</td><td>MAE↓</td><td>R²↑</td><td>MAE↓</td><td>R²↑</td><td>MAE↓</td></tr>
+<tr><td>Tolan et al. (2024)*</td><td>ViT-L</td><td>2.8</td><td>0.86</td><td>4.0</td><td>0.61</td><td>2.7</td><td>0.73</td><td>5.4</td><td>0.42</td><td>-</td></tr>
+<tr><td>Tolan et al. (2024)</td><td>ViT-L</td><td>2.4</td><td>0.90</td><td>3.4</td><td>0.81</td><td>2.9</td><td>0.69</td><td>5.4</td><td>0.48</td><td>2.42</td></tr>
+<tr><td>DINOv3 Web</td><td>ViT-7B</td><td>2.4</td><td>0.90</td><td>3.6</td><td>0.74</td><td>2.7</td><td>0.75</td><td>5.9</td><td>0.34</td><td>2.17</td></tr>
+<tr><td>DINOv3 Sat</td><td>ViT-L</td><td>2.2</td><td>0.91</td><td>3.2</td><td>0.81</td><td>2.4</td><td>0.81</td><td>5.8</td><td>0.42</td><td>2.07</td></tr>
+<tr><td>DINOv3 Sat</td><td>ViT-7B</td><td>2.2</td><td>0.92</td><td>3.2</td><td>0.82</td><td>2.6</td><td>0.74</td><td>5.5</td><td>0.51</td><td>2.02</td></tr>
+</table>
+
+**结果（表17）**  
+我们比较了不同的自监督学习（SSL）主干网络，其中“DINOv3 Sat”表示在SAT-493M数据集上训练的模型，“DINOv3 Web”表示在LVD-1689M数据集上训练的模型（见第3.1节）。可以看出，DINOv3卫星模型在大多数基准测试中达到了最先进的性能。我们的7B卫星模型在SatLidar1M验证集、SatLidar1M测试集和Open-Canopy数据集上设立了新的最先进水平，分别将平均绝对误差（MAE）从2.4降至2.2、从3.4降至3.2、从2.42降至2.02。这些结果表明，DINOv3的训练方案具有通用性，能够开箱即用地有效应用于其他领域。有趣的是，我们蒸馏得到的ViT-L卫星模型表现与7B模型相当，在SatLidar1M和Open-Canopy上取得了相近的结果，而在Neon测试集上的表现甚至出人意料地更好，达到了最低的MAE 2.4，优于7B模型的2.6以及Tolan等人（2024年）的2.9。我们的DINOv3 7B网络模型在基准测试中也达到了不错的性能，在SatLidar1M验证集、Neon和Open-Canopy上均优于Tolan等人（2024年）的结果，但整体仍落后于卫星模型。这凸显了在树冠高度估计这类物理基础任务中，领域特定预训练的重要性，因为此类任务依赖于传感器特定的先验知识和辐射一致性。
+
+
+### 8.3 与地球观测领域最先进方法的比较
+
+表18：我们将DINOv3模型与强基线DOFA（Xiong等人，2024年）、Prithvi-v2（Szwarcman等人，2024年）和Tolan等人（2024年）在Geo-Bench任务中的表现进行比较。尽管Prithvi-v2和DOFA利用了所有可用的光学波段，我们的模型仅使用RGB输入即实现了显著更优的性能。  
+(a) 分类任务。
+<table>
+<tr><td>Method</td><td>Arch.</td><td>FT</td><td>Bands</td><td>m-BEnet</td><td>m-brick-kiln</td><td>m-eurosat</td><td>m-forestnet</td><td>m-pv4ger</td><td>m-so2sat</td><td>Mean</td></tr>
+<tr><td>DOFA</td><td>ViT-L</td><td>🔥</td><td>all</td><td>68.7</td><td>98.4</td><td>96.6</td><td>55.7</td><td>98.2</td><td>61.6</td><td>79.9</td></tr>
+<tr><td>Best of Prithvi-v2</td><td>ViT-L/H</td><td>🔥</td><td>all</td><td>71.2</td><td>98.8</td><td>96.4</td><td>54.1</td><td>98.1</td><td>59.1</td><td>79.6</td></tr>
+<tr><td>Tolan et al. (2024)</td><td>ViT-L</td><td>❄️</td><td>RGB</td><td>66.0</td><td>97.1</td><td>95.2</td><td>56.3</td><td>94.3</td><td>58.1</td><td>77.8</td></tr>
+<tr><td>DINOv3 Sat</td><td>ViT-L</td><td>❄️</td><td>RGB</td><td>73.0</td><td>96.5</td><td>94.1</td><td>60.6</td><td>96.0</td><td>57.4</td><td>79.6</td></tr>
+<tr><td>DINOv3 Sat</td><td>7B</td><td>❄️</td><td>RGB</td><td>74.0</td><td>97.2</td><td>94.8</td><td>62.3</td><td>96.1</td><td>62.1</td><td>81.1</td></tr>
+<tr><td>DINOv3 Web</td><td>7B</td><td>❄️</td><td>RGB</td><td>74.6</td><td>97.7</td><td>97.0</td><td>57.9</td><td>98.3</td><td>63.8</td><td>81.6</td></tr>
+</table>
+(b) 分割任务。 
+<table>
+<tr><td>Method</td><td>Arch.</td><td>FT</td><td>Bands</td><td>m-cashew*</td><td>m-chesapeake</td><td>m-NeonTree</td><td>m-nz-cattle</td><td>m-pv4ger-seg</td><td>m-SA-crop</td><td>Mean</td></tr>
+<tr><td>DOFA</td><td>ViT-L</td><td>🔥</td><td>all</td><td>81.2</td><td>61.6</td><td>58.5</td><td>77.4</td><td>95.1</td><td>35.7</td><td>68.3</td></tr>
+<tr><td>Best of Prithvi-v2 </td><td>ViT-L/H</td><td>🔥</td><td>all</td><td>90.2</td><td>69.4</td><td>59.1</td><td>81.0</td><td>95.3</td><td>41.9</td><td>72.8</td></tr>
+<tr><td>Tolan et al. (2024)</td><td>ViT-L</td><td>❄️</td><td>RGB</td><td>92.8</td><td>73.7</td><td>58.1</td><td>83.1</td><td>94.7</td><td>35.1</td><td>72.9</td></tr>
+<tr><td>DINOv3 Sat</td><td>ViT-L</td><td>❄️</td><td>RGB</td><td>94.2</td><td>75.6</td><td>61.8</td><td>83.7</td><td>95.2</td><td>36.8</td><td>74.5</td></tr>
+<tr><td>DINOv3 Sat</td><td>7B</td><td>❄️</td><td>RGB</td><td>94.1</td><td>76.6</td><td>62.6</td><td>83.4</td><td>95.5</td><td>37.6</td><td>75.0</td></tr>
+<tr><td>DINOv3 Web</td><td>7B</td><td>❄️</td><td>RGB</td><td>96.0</td><td>76.5</td><td>66.4</td><td>83.7</td><td>95.9</td><td>36.8</td><td>75.9</td></tr>
+</table>
+∗根据 Szwarcman 等人 (2024) 的方法转换为6个类别。  
+
+我们在表18和表19中比较了不同方法在地球观测任务中的性能。冻结的DINOv3卫星模型和网络模型在15个分类、分割和水平目标检测任务中的12个上设立了新的最先进结果。我们的Geo-Bench结果超过了先前的模型，包括Prithvi-v2（Szwarcman等人，2024年）和DOFA（Xiong等人，2024年），后者在Sentinel-2和Landsat任务中使用了$^{6+}$波段以及任务特定的微调（见表18）。尽管我们的模型使用冻结的主干网络且仅输入RGB三通道，DINOv3卫星模型在三个未饱和分类任务和六个分割任务中的五个上均优于先前的方法。有趣的是，DINOv3 7B网络模型在这些基准测试中也极具竞争力。它在许多Geo-Bench任务以及大规模、高分辨率遥感分割和检测基准测试中表现出相当甚至更强的性能。如表18和表19所示，冻结的DINOv3网络模型在Geo-Bench任务以及LoveDA和DIOR数据集的分割与检测任务上均取得了新的领先结果。
+
+这些发现对地理空间基础模型的设计具有更广泛的意义。近期的研究强调了启发式技术，例如多时相聚合、多传感器融合或引入卫星特定元数据（Brown等人，2025年；Feng等人，2025年）。我们的结果表明，对于依赖精确物体边界的任务（如分割或目标检测），通用的自监督学习可以达到甚至超越特定于卫星的方法。这支持了新兴的证据，即即使在专业化的下游领域，非领域特定的预训练也能提供强大的泛化能力（Lahrichi等人，2025年）。
+
+
+总体而言，我们的结果表明领域特定预训练具有任务依赖性的优势。DINOv3 卫星模型在诸如深度估计等度量任务中表现出色，得益于针对卫星数据的特定先验知识；相比之下，DINOv3 网络模型则凭借多样化且通用的表征能力，在语义地理空间任务上达到了当前最先进的性能。这两个模型的互补优势展示了 DINOv3 自监督学习（SSL）范式的广泛适用性和有效性。
+
+![](images/a0d80d97994caf6542af15dbc3ffb05fa6646e251e1ec8e62e1df1a08a3769a3.jpg)  
+图18：单个 DINOv3 模型在遥感中的多样化应用示例。基于 DINOv3 特征的主成分分析（PCA）比 DINOv2 显示出更精细的细节。分割图仅使用 GEO-Bench 中 Chesapeake 数据集的标签生成。冠层高度模型解码器在 Open-Canopy 数据集上使用4个通道（RGB$^+$近红外）进行训练，而推理阶段仅使用RGB三通道。
+## 9 环境影响
+
+为了估算我们预训练过程中的碳排放量，我们采用了自然语言处理领域（Strubell 等，2019；Touvron 等，2023）和自监督学习领域（Oquab 等，2024）先前研究中使用的方法。我们固定所有外部变量的取值，即电源使用效率（PUE）和电网碳排放强度因子，采用与 Touvron 等人（2023）相同的数值：假设 PUE 为 1.1，美国电网平均碳排放强度因子为 0.385 kg CO₂ eq/kWh。对于 GPU 的功耗，我们采用其热设计功耗（TDP）：A100 GPU 为 400W，H100 GPU 为 700W。我们在表20中报告了 ViT-7B 模型预训练的能耗计算细节，并提供了与 DINOv2 和 MetaCLIP 的对比数据。作为另一个参照，训练一个 DINOv3 模型所需的能量（47 MWh）大约相当于一辆普通电动车行驶 240,000 公里的能耗。
+
+表19：我们将 DINOv3 与当前最先进的模型 Privthi-v2（Szwarcman 等，2024）、BillionFM（Cha 等，2024）以及 SkySense V2（Zhang 等，2025）在高分辨率语义地理空间任务上的性能进行比较。我们在分割数据集 LoveDA（1024×）和 iSAID（896×）上报告平均交并比（mIoU），在检测数据集 DIOR（800×）上报告平均精度（mAP）。
+
+∗该方法使用了经过 OpenStreetMap 监督预训练对齐的改进版 DINOv2 自监督学习方法，在 iSAID 上提升了 +0.8 mIoU。
+
+图19：DINOv3 7B 卫星模型与 Tolan 等人（2024）在 Open Canopy 数据集上的定性对比。两个模型的解码器均在 $448 \times 448$ 分辨率的输入图像上训练。可以看出，DINOv3 生成的地图更为准确，例如田地中树木的高度预测更加精确。
+
+**整个项目的碳足迹**  
+为了计算整个项目的碳足迹，我们粗略估计总共消耗了约 900 万 GPU 小时。采用上述相同的电网参数，我们估算项目的总碳足迹约为 2600 吨 CO₂ 当量（tCO₂ eq）。作为对比，一架波音 777 客机往返于巴黎和纽约之间一次所产生的碳排放约为 560 吨 CO₂ 当量。假设每天有 12 趟此类航班，则我们项目所造成的环境影响相当于这些航班一天总排放量的一半。需要说明的是，这一估算仅考虑了为 GPU 供电所产生的电力消耗，未包含冷却系统、设备制造和报废处理等其他环节的碳排放。
+
+表20：模型训练的碳足迹。我们报告了在 PUE 为 1.1、碳排放强度因子为 $0.385\ \mathrm{kg}$ CO₂eq/kWh 的条件下，完整模型预训练可能产生的碳排放量。
+
+## 10 结论
+
+DINOv3 代表了自监督学习领域的一项重大进步，展示了其在各个领域彻底改变视觉表征学习方式的潜力。通过精心的数据准备、设计和优化，扩展数据集和模型规模，DINOv3 展示了自监督学习在消除对人工标注依赖方面的强大能力。引入的 Gram 锚定方法有效地缓解了密集特征图在长时间训练过程中的退化问题，确保了稳健可靠的性能表现。
+
+结合使用后期优化策略，例如高分辨率后期训练和知识蒸馏，我们在广泛的视觉任务上实现了最先进的性能，且无需对图像编码器进行微调。DINOv3 系列视觉模型不仅设立了新的基准，还针对不同的资源限制、部署场景和应用需求提供了灵活多样的解决方案。DINOv3 取得的进展证明了自监督学习在推动计算机视觉乃至更广泛领域技术前沿发展方面的巨大前景。
+
+## 参考文献
+略
