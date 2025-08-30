@@ -888,11 +888,7 @@ $$
 
 我们进行了实验，尝试在训练和推理阶段消除这些异常维度。结果表明，这些维度在训练过程中具有显著影响：若施加L2正则化以抑制它们，模型性能会出现下降。然而，在推理阶段移除这些维度并不会导致性能显著变化，这表明它们主要承载的是琐碎或非信息性的信号。此外，我们观察到，最终的层归一化（layer normalization）会被训练成显著缩小这些异常维度的数值。因此，我们建议在下游任务中使用最终层特征时，应应用最终层的层归一化。另一种替代方案是使用批归一化（batch normalization），因为这些异常维度在不同图像块和图像之间具有一致性，批归一化可有效抑制其影响。
 
-对于使用早期层的特征需保持谨慎。如上所述，早期层同样受到特征维度异常值的影响，可能导致特征矩阵病态（ill-conditioned）。虽然最终层的归一化机制非常适合对最终特征的分布进行归一化，但其学习到的参数可能并不适用于早期层的特征。事实上，我们观察到在某些任务中直接对早期层应用最终层归一化会导致性能下降。在这种情况下，我们发现标准的特征缩放技术（例如使用批归一化或主成分分析PCA）能够有效应对特征维度异常值问题。
-
-表21：图1中所引用数据的出版年份、性能指标及文献来源详情。对于所有论文，我们报告其在ImageNet数据集上使用最大模型所取得的top-1准确率。对于弱监督和自监督模型，我们提供线性探针（linear probing）的性能结果。年份以论文首次在arXiv上发布的时间为准。
-
-例如，对于我们的语义分割实验（第6.3.2节）和深度估计实验（第6.3.3节），当使用中间层的特征时，我们应用了批归一化（batch normalization）。
+对于使用早期层的特征需保持谨慎。如上所述，早期层同样受到特征维度异常值的影响，可能导致特征矩阵病态（ill-conditioned）。虽然最终层的归一化机制非常适合对最终特征的分布进行归一化，但其学习到的参数可能并不适用于早期层的特征。事实上，我们观察到在某些任务中直接对早期层应用最终层归一化会导致性能下降。在这种情况下，我们发现标准的特征缩放技术（例如使用批归一化或主成分分析PCA）能够有效应对特征维度异常值问题。例如，对于我们的语义分割实验（第6.3.2节）和深度估计实验（第6.3.3节），当使用中间层的特征时，我们应用了批归一化（batch normalization）。
 
 ### B 附加结果
 
@@ -900,9 +896,32 @@ $$
 
 在图1中，我们提供了近年来最先进性能的大致演进情况。此处，我们提供图中报告的精确参考文献和性能数据。请参见表21。
 
+表21：图1中所引用数据的出版年份、性能指标及文献来源详情。对于所有论文，我们报告其在ImageNet数据集上使用最大模型所取得的top-1准确率。对于弱监督和自监督模型，我们提供线性探针（linear probing）的性能结果。年份以论文首次在arXiv上发布的时间为准。
+<table>
+<tr><td></td><td colspan="2">Supervised</td><td colspan="2">Weakly-Supervised</td><td colspan="2">Self-Supervised</td></tr>
+<tr><td>Year</td><td>Top-1</td><td>Reference</td><td>Top-1</td><td>Reference</td><td>Top-1</td><td>Reference</td></tr>
+<tr><td>2012</td><td>59.3</td><td>Krizhevsky et al. (2012)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>2013</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>2014</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>2015</td><td>78.6</td><td>He et al. (2016)</td><td>34.9</td><td>Joulin et al. (2016)</td><td></td><td></td></tr>
+<tr><td>2016</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>2017</td><td>80.9</td><td>Xie et al. (2017)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>2018</td><td></td><td></td><td>83.6</td><td>Mahajan et al. (2018)</td><td>38.2</td><td>Caron et al. (2018)</td></tr>
+<tr><td>2019</td><td>84.3</td><td>Tan and Le (2019)</td><td></td><td></td><td>68.6</td><td>He et al. (2020)</td></tr>
+<tr><td>2020</td><td>87.5</td><td>Kolesnikov et al. (2020)</td><td></td><td></td><td>75.3</td><td>Caron et al. (2020)</td></tr>
+<tr><td>2021</td><td>88.6</td><td>Dosovitskiy et al. (2020)</td><td>88.4</td><td>Radford et al. (2021)</td><td>82.3</td><td>Zhou et al. (2021)</td></tr>
+<tr><td>2022</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>2023</td><td>89.5</td><td>Dehghani et al. (2023)</td><td></td><td></td><td>86.5</td><td>Oquab et al. (2024)</td></tr>
+<tr><td>2024</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>2025</td><td></td><td></td><td>89.3</td><td>Bolya et al. (2025)</td><td>88.4</td><td>This work</td></tr>
+</table>
+
 #### B.2 逐层分析
 
 在本节中，我们评估了DINOv3 7B模型各个层中特征的质量。具体来说，我们展示了五个代表性任务的结果：分类（IN-1k验证集、ImageNet-ReAL和ObjectNet）、分割（ADE20k）、深度估计（NYU）、跟踪（DAVIS）和3D对应关系估计（NAVI）。对于前三个基准测试，我们按照第6.1.2节和第6.2.1节的方法，在每个主干网络层的输出上训练一个线性层以评估特征性能。对于跟踪和对应关系估计任务，我们采用第6.1.3节和第6.1.5节中的非参数方法。
+
+![](images/567802921b64cc52692d63af136369aad277f7935a54df2aff931f9746f2dca7.jpg)
+图21：使用DINOv3 7B中间层特征在五个基准上的结果。评估（a-c）采用线性分类层（见第6.1.2节和6.2.1节），而（d, e）采用非参数方法（见第6.1.3节和6.1.5节）。
 
 结果如图21所示。我们发现，对于分类和密集任务，性能随着网络层的加深而平稳提升。而深度估计、跟踪和3D对应关系估计任务的性能在第32层左右达到峰值，这表明对于几何信息起重要作用的任务，通过考虑更早的网络层可以提升DINOv3的下游任务性能。另一方面，中间层的性能相比最后一层仅有轻微提升，因此最后一层仍然是一个不错的默认选择。
 
@@ -910,17 +929,63 @@ $$
 
 我们提供了补充第6节主要结果的额外实验结果。在表22中，我们展示了在小数据集上进行细粒度分类的线性探测（Fine-S，见第6.2.1节）的逐数据集结果。在表23中，我们给出了实例识别评估（第6.2.2节）的完整结果，并增加了更多指标。
 
-图21：使用DINOv3 7B中间层特征在五个基准上的结果。评估（a-c）采用线性分类层（见第6.1.2节和6.2.1节），而（d, e）采用非参数方法（见第6.1.3节和6.1.5节）。
-
 表22：在小型数据集上进行细粒度分类的各数据集结果，采用线性探针方法（Fine-S，见第6.2.1节），遵循Oquab等人（2024）的方法。
+<table>
+<tr><td>Method</td><td>ViT</td><td>Food</td><td>C10</td><td>C100</td><td>SUN</td><td>Cars</td><td>Aircr.</td><td>VOC</td><td>DTD</td><td>Pets</td><td> Cal101</td><td>Flowers</td><td>CUB</td><td>Avg</td></tr>
+<tr><td>Agglomerative backbones</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>AM-RADIOv2.5</td><td>g/14</td><td>96.5</td><td>99.5</td><td>95.0</td><td>82.8</td><td>95.4</td><td>91.7</td><td>90.3</td><td>88.6</td><td>96.7</td><td>98.8</td><td>99.7</td><td>91.5</td><td>93.9</td></tr>
+<tr><td>Weakly-supervised backbones</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>SigLIP</td><td>g/16</td><td>97.7</td><td>99.3</td><td>92.7</td><td>85.1</td><td>96.5</td><td>88.7</td><td>91.0</td><td>87.7</td><td>98.7</td><td>90.3</td><td>99.7</td><td>90.3</td><td>93.7</td></tr>
+<tr><td>PE-core</td><td>G/14</td><td>97.8</td><td>99.5</td><td>95.3</td><td>85.2</td><td>96.5</td><td>92.0</td><td>90.5</td><td>88.2</td><td>98.7</td><td>93.3</td><td>99.5</td><td>93.3</td><td>94.5</td></tr>
+<tr><td>AIMv2</td><td>3B/14</td><td>96.6</td><td>99.3</td><td>93.3</td><td>83.4</td><td>95.6</td><td>84.2</td><td>90.5</td><td>87.4</td><td>96.8</td><td>90.7</td><td>99.7</td><td>90.7</td><td>92.9</td></tr>
+<tr><td>EVA CLIP</td><td>18B/14</td><td>96.9</td><td>99.5</td><td>95.4</td><td>85.0</td><td>95.4</td><td>81.6</td><td>90.2</td><td>87.1</td><td>98.4</td><td>90.6</td><td>99.6</td><td>90.6</td><td>92.9</td></tr>
+<tr><td>Self-supervised backbones</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Franca</td><td>g/14</td><td>89.2</td><td>98.6</td><td>90.4</td><td>73.7</td><td>89.7</td><td>74.1</td><td>89.4</td><td>80.6</td><td>93.2</td><td>97.6</td><td>97.8</td><td>78.4</td><td>87.7</td></tr>
+<tr><td>DINOv2</td><td>g/14</td><td>95.6</td><td>99.5</td><td>94.5</td><td>78.9</td><td>94.6</td><td>88.5</td><td>88.4</td><td>86.8</td><td>96.8</td><td>95.9</td><td>99.7</td><td>91.6</td><td>92.6</td></tr>
+<tr><td>Web-DINO</td><td>7B/14</td><td>96.1</td><td>99.5</td><td>93.4</td><td>77.5</td><td>95.0</td><td>88.8</td><td>87.0</td><td>79.9</td><td>92.9</td><td>93.1</td><td>99.6</td><td>78.9</td><td>90.2</td></tr>
+<tr><td>DINOv3</td><td>7B/16</td><td>96.9</td><td>99.6</td><td>96.0</td><td>81.1</td><td>95.0</td><td>88.2</td><td>88.2</td><td>87.2</td><td>97.0</td><td>94.8</td><td>99.7</td><td>92.4</td><td>93.0</td></tr>
+</table>
+
+
+表23：实例识别的完整结果，提供第6.2.2节的额外指标。
+<table>
+<tr><td rowspan="2">Method</td><td rowspan="2">ViT</td><td colspan="2">Oxford</td><td colspan="2">Paris</td><td colspan="3">Met</td><td>AmsterTime</td></tr>
+<tr><td>M</td><td>H</td><td>M</td><td>H</td><td>GAP</td><td>GAP-</td><td>ACC</td><td>mAP</td></tr>
+<tr><td colspan="9">Agglomerative backbones</td></tr>
+<tr><td>AM-RADIOv2.5</td><td>g/16</td><td>72.8</td><td>50.7</td><td>93.3</td><td>85.3</td><td>30.5</td><td>65.9</td><td>69.0</td><td>46.7</td></tr>
+<tr><td colspan="9">Weakly-supervised backbones</td></tr>
+<tr><td>SigLIPv2</td><td>g/16</td><td>49.3</td><td>25.1</td><td>79.3</td><td>60.9</td><td>0.0</td><td>0.0</td><td>0.2</td><td>15.5</td></tr>
+<tr><td>PE-core</td><td>G/14</td><td>57.4</td><td>32.7</td><td>83.6</td><td>68.9</td><td>10.6</td><td>34.8</td><td>44.9</td><td>23.1</td></tr>
+<tr><td>AIMv2</td><td>3B/14</td><td>55.0</td><td>28.8</td><td>85.6</td><td>71.4</td><td>29.5</td><td>67.3</td><td>69.9</td><td>23.1</td></tr>
+<tr><td>EvaCLIP</td><td>18B/14</td><td>55.2</td><td>27.1</td><td>81.8</td><td>65.6</td><td>0.5</td><td>4.3</td><td>11.0</td><td>18.9</td></tr>
+<tr><td colspan="9">Self-supervised backbones</td></tr>
+<tr><td>Franca</td><td>g/14</td><td>44.6</td><td>14.3</td><td>73.8</td><td>51.6</td><td>27.2</td><td>54.3</td><td>57.7</td><td>21.1</td></tr>
+<tr><td>DINOv2</td><td>g/14</td><td>78.2</td><td>58.2</td><td>92.7</td><td>84.6</td><td>44.6</td><td>73.0</td><td>75.2</td><td>48.9</td></tr>
+<tr><td>Web-DINO</td><td>7B/14</td><td>64.1</td><td>31.2</td><td>89.8</td><td>80.3</td><td>35.2</td><td>67.3</td><td>71.3</td><td>30.6</td></tr>
+<tr><td>DINOv3</td><td>7B/16</td><td>81.1</td><td>60.7</td><td>93.3</td><td>87.1</td><td>55.4</td><td>77.7</td><td>80.7</td><td>56.5</td></tr>
+</table>
 
 最后，在表24中，我们给出了我们在COCO-Stuff（Caesar等，2018）、PASCAL VOC 2012（Everingham等，2012）和Cityscapes（Geiger等，2013）数据集上的最先进语义分割模型（见第6.3.2节）的补充结果。
+
+表 24：在其他数据集上的语义分割与最先进系统的比较，作为表 11 中 ADE20k 结果的补充。我们在单尺度或 多尺度（TTA）设置下报告 mIoU 分数，并与每个数据集之前发表的最佳结果进行比较：COCO-Stuff 164k 采用 Fang 等人（2023）的结果，Cityscapes 采用 Wang 等人（2023b）的结果，VOC 2012 采用 Zoph 等人（2020）的结果。我们使用的输入分辨率分别为：COCO-Stuff 为 1280，VOC 2012 为 1024，Cityscapes 为 1280。所有基线都需要对主干网络进行微调，而我们保持 DINOv3 主干网络冻结。
+<table>
+<tr><td>Method</td><td>FT</td><td colspan="2">COCO-Stuff 164k</td><td colspan="2">Cityscapes</td><td colspan="2">VOC 2012</td></tr>
+<tr><td></td><td></td><td>Single</td><td>TTA</td><td>Single</td><td>TTA</td><td>Single</td><td>TTA</td></tr>
+<tr><td>Previous Best</td><td>🔥</td><td>53.7</td><td>53.7</td><td>86.3</td><td>87.0</td><td>-</td><td>90.0</td></tr>
+<tr><td>DINOv3</td><td>❄️</td><td>53.8</td><td>54.0</td><td>86.1</td><td>86.7</td><td>90.1</td><td>90.4</td></tr>
+</table>
 
 B.4 基于文字密集型数据集的分类
 
 在本实验中，我们评估了DINOv3在需要某种形式字符识别的分类任务上的表现，这些任务包括路标、标志和产品分类。我们将我们的模型与最佳的自监督模型（DINOv2 g）和最佳的弱监督模型（PE-core G）进行了比较。我们以512分辨率的图像运行本实验，并调整其他模型的patch大小以匹配序列长度。该实验的结果报告于表25中。
 
-表23：实例识别的完整结果，提供第6.2.2节的额外指标。
+表 25：DINOv3 在文本密集型数据集上的分类性能比较。这些数据集对自监督学习（SSL）来说 notoriously 难度较高。我们将 DINOv3 与最佳的 DINOv2 模型（g）以及最佳的弱监督 PE-core 模型（G）进行比较。
+<table>
+<tr><td>Model</td><td></td><td>GTSRB</td><td>Logo-2K+</td><td>FlickrLogos-32</td><td>RP2K</td><td>Products-10K</td><td>SOProducts</td></tr>
+<tr><td>DINOv2</td><td>ViT-g</td><td>78.2</td><td>52.9</td><td>83.6</td><td>91.4</td><td>70.8</td><td>57.6</td></tr>
+<tr><td>PE-core</td><td>ViT-G</td><td>94.8</td><td>93.2</td><td>99.0</td><td>93.1</td><td>80.6</td><td>80.7</td></tr>
+<tr><td>DINOv3-7B</td><td>ViT-7B</td><td>87.5</td><td>86.0</td><td>86.3</td><td>94.7</td><td>74.5</td><td>65.2</td></tr>
+</table>
 
 我们发现，我们的新模型DINOv3显著优于其前身DINOv2。然而，与弱监督模型之间的性能差距仍然较大。由于我们的模型在训练过程中未使用图像-文本配对数据，因此更难学习字形（glyph）关联。Fan等人（2025）的近期工作暗示了训练数据对此类任务性能的重要影响。鉴于我们工作的主要重点是改进密集特征，缩小这一差距将留待未来研究。
 
@@ -928,15 +993,18 @@ B.4 基于文字密集型数据集的分类
 
 我们按照 Goyal 等人（2022b）的协议，评估了 DINOv3 7B 模型在不同收入水平和地区的地理公平性和多样性。作为参考，我们提供了 DINOv2 和 SEERv2 的结果。结果表明，DINOv3 在不同收入类别中的表现相对一致，尽管低收入组别的性能相比最高收入组别下降了 23%。中等和高收入组别的表现相当。在地区层面，DINOv3 在不同地区的得分相对较好；然而，欧洲和非洲之间的相对差异超过 14%，相比 DINOv2 超过 17% 的相对差异有所改善。
 
+表 26：按照 Goyal 等人（2022b）的协议，在收入组别和地区间进行的地理公平性和多样性分析。
+<table>
+<tr><td></td><td></td><td colspan="3">Income Buckets</td><td colspan="4">Regions</td></tr>
+<tr><td>Method</td><td>Arch.</td><td>low</td><td>medium</td><td>high</td><td>Africa</td><td>Asia</td><td>Americas</td><td>Europe</td></tr>
+<tr><td>SEERv2</td><td>RG-10B</td><td>59.7</td><td>78.5</td><td>86.6</td><td>65.9</td><td>76.3</td><td>81.1</td><td>85.6</td></tr>
+<tr><td>DINOv2</td><td>ViT-g/14</td><td>67.4</td><td>83.3</td><td>90.5</td><td>74.0</td><td>81.6</td><td>86.2</td><td>89.7</td></tr>
+<tr><td>DINOv3</td><td>ViT-7B</td><td>69.6</td><td>85.7</td><td>90.9</td><td>76.7</td><td>83.0</td><td>88.0</td><td>90.7</td></tr>
+</table>
+
 ### C 实现细节
 
-我们采用多裁剪（multi-crop）方法（Caron 等人，2020），学生模型接收 2 个全局裁剪（256×256 像素）和 8 个局部裁剪（112×112 像素），总序列长度为 370 万个标记。教师模型（学生模型的指数移动平均）仅处理全局裁剪。我们将 $\mathcal { L }$ DINO 损失应用于学生模型所有局部裁剪和教师模型两个全局裁剪的类别标记，以及两个模型不同全局裁剪对之间。学生模型看到的全局裁剪的补丁标记中，有 [0.1, 0.5] 的随机比例以 50% 的概率被遮蔽，我们在这些标记与教师模型 EMA 看到的可见标记之间应用 $\mathcal { L } _ { \mathrm { i B O T } }$ 损失。我们将 $\boldsymbol { \mathcal { L } } _ { \mathrm { D K o l e o } }$ 损失应用于学生模型第一个全局裁剪的 16 个类别标记的小批次。我们使用 Pytorch 的完全分片数据并行设置进行 100 万次迭代训练，使用 bfloat16 和 8 位浮点矩阵乘法。我们使用 0.0004 的恒定学习率，预热 10 万次迭代，权重衰减为 0.04，每层学习率衰减因子为 0.98，随机深度（层丢弃）值为 0.4，教师模型的 EMA 因子为 0.999。其余超参数可在代码发布中的配置文件中找到。
-
-表 24：在其他数据集上的语义分割与最先进系统的比较，作为表 11 中 ADE20k 结果的补充。我们在单尺度或 多尺度（TTA）设置下报告 mIoU 分数，并与每个数据集之前发表的最佳结果进行比较：COCO-Stuff 164k 采用 Fang 等人（2023）的结果，Cityscapes 采用 Wang 等人（2023b）的结果，VOC 2012 采用 Zoph 等人（2020）的结果。我们使用的输入分辨率分别为：COCO-Stuff 为 1280，VOC 2012 为 1024，Cityscapes 为 1280。所有基线都需要对主干网络进行微调，而我们保持 DINOv3 主干网络冻结。
-
-表 25：DINOv3 在文本密集型数据集上的分类性能比较。这些数据集对自监督学习（SSL）来说 notoriously 难度较高。我们将 DINOv3 与最佳的 DINOv2 模型（g）以及最佳的弱监督 PE-core 模型（G）进行比较。
-
-表 26：按照 Goyal 等人（2022b）的协议，在收入组别和地区间进行的地理公平性和多样性分析。
+我们采用多裁剪（multi-crop）方法（Caron 等人，2020），学生模型接收 2 个全局裁剪（256×256 像素）和 8 个局部裁剪（112×112 像素），总序列长度为 370 万个标记。教师模型（学生模型的指数移动平均）仅处理全局裁剪。我们将 $\mathcal{L}_{DINO}$  损失应用于学生模型所有局部裁剪和教师模型两个全局裁剪的类别标记，以及两个模型不同全局裁剪对之间。学生模型看到的全局裁剪的补丁标记中，有 [0.1, 0.5] 的随机比例以 50% 的概率被遮蔽，我们在这些标记与教师模型 EMA 看到的可见标记之间应用 $\mathcal{L}_{\mathrm{iBOT}}$ 损失。我们将 $\boldsymbol{\mathcal{L}}_{\mathrm{DKoleo}}$ 损失应用于学生模型第一个全局裁剪的 16 个类别标记的小批次。我们使用 Pytorch 的完全分片数据并行(fully-sharded data-parallel, FSDP)设置进行 100 万次迭代训练，使用 bfloat16 和 8 位浮点矩阵乘法。我们使用 0.0004 的恒定学习率，预热 10 万次迭代，权重衰减为 0.04，每层学习率衰减因子为 0.98，随机深度（层丢弃）值为 0.4，教师模型的 EMA 因子为 0.999。其余超参数可在代码发布中的配置文件中找到。
 
 对于 Gram 锚定步骤，我们使用 $w _ { \mathrm { G r a m } } = 2$ 的损失权重，并且每 10k 步更新一次 Gram 教师模型，最多更新三次。对于高分辨率适应（第 5.1 节），我们以以下概率从以下全局/局部/Gram 教师裁剪分辨率组合中进行采样：(512, 112, 768) 的概率 $p = 0 . 3$，(768, 112, 1152) 的概率 $p = 0 . 3$，(768, 168, 1152) 的概率 $p = 0 . 3$，(768, 224, 1152) 的概率 $p = 0 . 0 5$，以及 (768, 336, 1152) 的概率 $p = 0 . 0 5$。这些值是通过经验获得的。
 
@@ -986,18 +1054,44 @@ B.4 基于文字密集型数据集的分类
 **评估协议**  
 类似于 Rajasegaran 等 (2025) 的方法，我们实现了一种基于 patch 相似性的非参数标签传播协议，其中相似性由冻结的 DINOv3 主干网络提取的特征之间的余弦相似度计算得到。我们假设视频的第一帧已标注实例分割掩码，并将其表示为每个 patch 的 one-hot 向量。对于每一帧，我们计算该帧所有 patch 的特征与第一帧以及少量过去帧中所有 patch 特征之间的余弦相似度。针对当前帧中的某个 patch，我们在其空间邻域内选择相似度最高的 $k$ 个 patch，并计算其标签的加权平均，作为该 patch 的预测结果。处理完一帧后，进入下一帧，并将前一帧的预测结果作为软标签（soft instance segmentation labels）继续传播。在将单帧图像送入主干网络时，我们将图像缩放至其短边达到特定尺寸，同时保持长宽比，并向上取整到 patch 大小的整数倍。² patch 相似性与标签传播在特征分辨率上进行计算，随后通过双线性插值将掩码概率图恢复到原始分辨率，用于计算 $\mathcal{J}\&\mathcal{F}$。我们考虑了多种超参数组合，例如用作上下文的过去帧数量、邻居数 $k$ 以及空间邻域大小，详见表 27。我们在 DAVIS 的训练集上进行超参数选择，并将最优组合应用于所有数据集的测试集。
 
+表27：DAVIS 2017训练分割上的视频分割追踪评估所使用的超参数列表（Pont-Tuset等人，2017）。突出显示的最佳超参数适用于所有数据集。
+<table>
+<tr><td>Max context length</td><td>Neighborhood mask size</td><td>Neighborhood mask shape</td><td>Top-K</td><td>Temperature</td></tr>
+<tr><td>7</td><td>12</td><td>Square</td><td>5</td><td>0.2</td></tr>
+<tr><td>7</td><td>12</td><td>Circle</td><td>5</td><td>0.2</td></tr>
+<tr><td>7</td><td>5</td><td>Square</td><td>5</td><td>0.2</td></tr>
+<tr><td>7</td><td>24</td><td>Square</td><td>5</td><td>0.2</td></tr>
+<tr><td>7</td><td>∞</td><td>一</td><td>5</td><td>0.2</td></tr>
+<tr><td>7</td><td>12</td><td>Square</td><td>5</td><td>0.01</td></tr>
+<tr><td>7</td><td>12</td><td>Square</td><td>5</td><td>0.1</td></tr>
+<tr><td>7</td><td>12</td><td>Square</td><td>5</td><td>0.7</td></tr>
+<tr><td>4</td><td>12</td><td>Square</td><td>5</td><td>0.2</td></tr>
+<tr><td>10</td><td>12</td><td>Square</td><td>5</td><td>0.2</td></tr>
+<tr><td>15</td><td>12</td><td>Square</td><td>5</td><td>0.2</td></tr>
+<tr><td>7</td><td>12</td><td>Square</td><td>3</td><td>0.2</td></tr>
+<tr><td>7</td><td>12</td><td>Square</td><td>10</td><td>0.2</td></tr>
+<tr><td>7</td><td>12</td><td>Square</td><td>15</td><td>0.2</td></tr>
+<tr><td>15</td><td>12</td><td>Circle</td><td>10</td><td>0.1</td></tr>
+<tr><td>15</td><td>24</td><td>Circle</td><td>10</td><td>0.1</td></tr>
+<tr><td>15</td><td>36</td><td>Circle</td><td>10</td><td>0.1</td></tr>
+<tr><td>15</td><td>∞</td><td>一</td><td>10</td><td>0.1</td></tr>
+</table>
+
 #### D.6 视频分类
 
-数据集与评估指标 我们使用UCF101 (Soomro等人，2012)，Something-Something V2 (Goyal等人，2017)和Kinetics-400 (Kay等人，2017)数据集对DINOv3在视频分类上的表现进行了评估。从高层次上看，我们从每个视频中提取固定数量的帧，用固定的骨干网络编码它们，并将所有片段特征收集到一个平坦序列中，然后将其送入浅层基于变换器的分类器，该分类器是在一组标注好的视频上通过常规监督训练得到的。在之前的研究中，例如(Assran等人，2025)，这种协议被称为注意探测，是对用于图像分类的线性探测的一个提示。在接下来的段落中，我们将描述我们对该协议的实现。
+**数据集与评估指标**  
+我们使用UCF101 (Soomro等人，2012)，Something-Something V2 (Goyal等人，2017)和Kinetics-400 (Kay等人，2017)数据集对DINOv3在视频分类上的表现进行了评估。从高层次上看，我们从每个视频中提取固定数量的帧，用固定的骨干网络编码它们，并将所有片段特征收集到一个平坦序列中，然后将其送入浅层基于变换器的分类器，该分类器是在一组标注好的视频上通过常规监督训练得到的。在之前的研究中，例如(Assran等人，2025)，这种协议被称为注意探测，是对用于图像分类的线性探测的一个提示。在接下来的段落中，我们将描述我们对该协议的实现。
 
-训练 在训练时，我们从每个视频中随机选择16帧，同时记录对应的时间戳。我们还采样了一个空间裁剪的参数，这些参数会在$40\%$至$100\%$面积之间变化——这些参数将在视频的所有帧间共享以避免抖动。然后，我们将每一帧作为独立的256$\times$256图像进行处理，提取16$\times$16的片段特征并丢弃CLS令牌。对于每个片段，我们跟踪其定义在$[0, 1]^2$框中的空间坐标。来自所有帧的片段特征被线性投影到1024维，连接成长度为16$\times$16$\times$16=4096的平坦序列，然后馈送给四个自我注意力块来建模片段之间的空间和时间关系。为了确保模型能够访问位置信息，我们在块前注入了每个片段的时间戳和空间坐标的加法sin-cos嵌入(Vaswani等人，2017)，以及在每个注意力头中的具有随机空间旋转的三维因子化RoPE(Heo等人，2024)。经过这四个块后，我们应用一个带有单一无位置可学习查询的交叉注意力块来汇总所有片段的信息到一个向量中，这个向量随后线性投影以获得最终的分类logits。由自我注意力块堆栈、交叉注意力块、位置嵌入和最终投影组成的视频分类器，在标准交叉熵损失下以批大小为64训练20个周期。实际上，我们并行训练了一组分类器，每种学习率$\{1\cdot10^{-4}, 2\cdot10^{-4}, 5\cdot10^{-4}, 1\cdot10^{-3}, 2\cdot10^{-3}, 5\cdot10^{-3}\}$和权重衰减$\{10^{-3}, 10^{-2}, 10^{-1}\}$的组合都有对应的分类器。对于每个数据集，我们使用90%的训练集更新模型参数，10%的训练集选择最佳的学习率和权重衰减组合，最后报告选定模型在验证集上的性能。
+**训练**  
+在训练时，我们从每个视频中随机选择16帧，同时记录对应的时间戳。我们还采样了一个空间裁剪的参数，这些参数会在$40\%$至$100\%$面积之间变化——这些参数将在视频的所有帧间共享以避免抖动。然后，我们将每一帧作为独立的256$\times$256图像进行处理，提取16$\times$16的片段特征并丢弃CLS令牌。对于每个片段，我们跟踪其定义在$[0, 1]^2$框中的空间坐标。来自所有帧的片段特征被线性投影到1024维，连接成长度为16$\times$16$\times$16=4096的平坦序列，然后馈送给四个自我注意力块来建模片段之间的空间和时间关系。为了确保模型能够访问位置信息，我们在块前注入了每个片段的时间戳和空间坐标的加法sin-cos嵌入(Vaswani等人，2017)，以及在每个注意力头中的具有随机空间旋转的三维因子化RoPE(Heo等人，2024)。经过这四个块后，我们应用一个带有单一无位置可学习查询的交叉注意力块来汇总所有片段的信息到一个向量中，这个向量随后线性投影以获得最终的分类logits。由自我注意力块堆栈、交叉注意力块、位置嵌入和最终投影组成的视频分类器，在标准交叉熵损失下以批大小为64训练20个周期。实际上，我们并行训练了一组分类器，每种学习率$\{1\cdot10^{-4}, 2\cdot10^{-4}, 5\cdot10^{-4}, 1\cdot10^{-3}, 2\cdot10^{-3}, 5\cdot10^{-3}\}$和权重衰减$\{10^{-3}, 10^{-2}, 10^{-1}\}$的组合都有对应的分类器。对于每个数据集，我们使用90%的训练集更新模型参数，10%的训练集选择最佳的学习率和权重衰减组合，最后报告选定模型在验证集上的性能。
 
-表27：DAVIS 2017训练分割上的视频分割追踪评估所使用的超参数列表（Pont-Tuset等人，2017）。突出显示的最佳超参数适用于所有数据集。
+**推理**  
+在推理时，我们遵循确定性的策略来为每个视频采样单个片段：我们取第一帧、最后一帧及均匀间隔的中间帧，总共16帧。从每一帧中，我们裁剪最大的中心正方形并调整大小至256$\times$256像素，可能丢失矩形视频两侧的信息。然后，我们将这些帧馈送给DINOv3及其分类器以获得视频的预测。或者，我们遵循Assran等人(2025)的方法并通过选择多个帧序列和多个空间裁剪执行测试时增强(TTA)，独立地处理它们然后平均类别概率以获得最终预测。片段采样的示例见图22。
 
-推理 在推理时，我们遵循确定性的策略来为每个视频采样单个片段：我们取第一帧、最后一帧及均匀间隔的中间帧，总共16帧。从每一帧中，我们裁剪最大的中心正方形并调整大小至256$\times$256像素，可能丢失矩形视频两侧的信息。然后，我们将这些帧馈送给DINOv3及其分类器以获得视频的预测。或者，我们遵循Assran等人(2025)的方法并通过选择多个帧序列和多个空间裁剪执行测试时增强(TTA)，独立地处理它们然后平均类别概率以获得最终预测。片段采样的示例见图22。
+**基线**  
+对于选定的基线模型，我们使用相同的评估协议，即特征提取、分类器架构、训练过程和推理协议，但有一些差异。输入分辨率为256$\times$256像素用于使用16大小片段的模型，224$\times$224像素用于使用14大小片段的模型。这样，所有骨干网络产生相同数量的标记，并因此在分类器中花费相同的计算量。所有模型都是逐帧独立处理视频的，因为它们是在图像上训练的。唯一的例外是V-JEPA 2，我们为其提供整个片段以提取时间感知特征。由于V-JEPA 2将时间轴减少了二分之一，例如给定16帧输入会产生8个时间步长，我们复制每个片段令牌以匹配其他模型的序列长度。
 
-基线 对于选定的基线模型，我们使用相同的评估协议，即特征提取、分类器架构、训练过程和推理协议，但有一些差异。输入分辨率为256$\times$256像素用于使用16大小片段的模型，224$\times$224像素用于使用14大小片段的模型。这样，所有骨干网络产生相同数量的标记，并因此在分类器中花费相同的计算量。所有模型都是逐帧独立处理视频的，因为它们是在图像上训练的。唯一的例外是V-JEPA 2，我们为其提供整个片段以提取时间感知特征。由于V-JEPA 2将时间轴减少了二分之一，例如给定16帧输入会产生8个时间步长，我们复制每个片段令牌以匹配其他模型的序列长度。
-
+![](images/2a259aea688531638f16010ee7bb244cdac1ba646432bc6950b585c95caa1eea.jpg)  
 图22：视频分类中的片段采样。在训练或推理时选择一个片段，意味着确定空间裁剪的坐标以及采样的帧/时间戳。在训练阶段，我们通过从整个视频中随机选择帧，并应用覆盖面积≥40%的空间裁剪，来随机采样片段。在推理阶段，我们以确定性方式选择片段。在空间维度上，我们取左、中、右对齐的三个最大正方形裁剪区域；在时间维度上，我们取两组有重叠的帧，使其尽可能覆盖整个视频，并且时间戳交错排列。
 
 #### D.7 图像分类的线性探针评估
@@ -1021,8 +1115,6 @@ B.4 基于文字密集型数据集的分类
 
 **评估协议**  
 图像相似度通过查询图像和目标图像的 CLS token 之间的余弦距离计算。我们遵循 Radenović 等（2018）对 Oxford 和 Paris 的评估协议，Yildiz 等（2022）对 AmsterTime 的评估协议，以及 Ypsilantis 等（2021）对 Met 的评估协议。对于 Met 数据集，这包括使用网格搜索在 Met 的验证集上调整超参数 $k$ 和 $\tau$ 以优化 GAP，并使用在 Met 训练集上估计的 PCA 对特征进行白化处理。
-
----
 
 #### D.9 目标检测
 
@@ -1070,20 +1162,38 @@ B.4 基于文字密集型数据集的分类
 
 #### D.11 单目深度估计
 
-**实现细节** 我们的方法与 Depth Anything v2 (DAv2) (Yang 等, 2024b) 主要区别在于图像分辨率的配置，设置为 $768 \times 1024$ 像素，以及网络架构。训练过程中骨干网络保持冻结，同时在 DPT 头部（Ranftl 等, 2021）末端应用 0.05 的 dropout 率。作为解码器的输入，我们从 DINOv3 7B/16 骨干网络的四个中间层（即第 [10, 20, 30, 40] 层）提取特征。我们对所有层的特征应用最终的层归一化（layer norm），并添加一个可学习的批归一化（batch normalization）。深度估计输出被离散化为 256 个均匀分布的区间（bins），覆盖从 0.001 米到 100 米的范围。训练采用 1e-3 的基础学习率，使用 PolyLR 调度器（幂次为 3.5）并包含一个持续 12k 次迭代的线性预热阶段。为了增强鲁棒性和泛化能力，我们应用了一系列数据增强技术：高斯模糊、高斯噪声、自动对比度、自动均衡化、颜色抖动、旋转以及左右翻转。
+**实现细节**  
+我们的方法与 Depth Anything v2 (DAv2) (Yang 等, 2024b) 主要区别在于图像分辨率的配置，设置为 $768 \times 1024$ 像素，以及网络架构。训练过程中骨干网络保持冻结，同时在 DPT 头部（Ranftl 等, 2021）末端应用 0.05 的 dropout 率。作为解码器的输入，我们从 DINOv3 7B/16 骨干网络的四个中间层（即第 [10, 20, 30, 40] 层）提取特征。我们对所有层的特征应用最终的层归一化（layer norm），并添加一个可学习的批归一化（batch normalization）。深度估计输出被离散化为 256 个均匀分布的区间（bins），覆盖从 0.001 米到 100 米的范围。训练采用 1e-3 的基础学习率，使用 PolyLR 调度器（幂次为 3.5）并包含一个持续 12k 次迭代的线性预热阶段。为了增强鲁棒性和泛化能力，我们应用了一系列数据增强技术：高斯模糊、高斯噪声、自动对比度、自动均衡化、颜色抖动、旋转以及左右翻转。
 
-**数据集与评估指标** 我们在 DAv2 的数据集上训练模型，该数据集由来自 IRS、TartanAir、BlendedMVS、Hypersim 和 VKITTI2 数据集的合成图像组成。我们在五个数据集上进行评估：NYUv2 (Silberman 等, 2012)、KITTI (Geiger 等, 2013)、ETH3D (Schöps 等, 2017)、ScanNet (Ke 等, 2025) 以及 DIODE (Vasiljevic 等, 2019)。我们采用零样本尺度不变深度设置，并报告标准指标：绝对相对误差（absolute relative error）和 $\delta _ { 1 }$（参见 Yang 等, 2024a）。
+**数据集与评估指标**  
+我们在 DAv2 的数据集上训练模型，该数据集由来自 IRS、TartanAir、BlendedMVS、Hypersim 和 VKITTI2 数据集的合成图像组成。我们在五个数据集上进行评估：NYUv2 (Silberman 等, 2012)、KITTI (Geiger 等, 2013)、ETH3D (Schöps 等, 2017)、ScanNet (Ke 等, 2025) 以及 DIODE (Vasiljevic 等, 2019)。我们采用零样本尺度不变深度设置，并报告标准指标：绝对相对误差（absolute relative error）和 $\delta _ { 1 }$（参见 Yang 等, 2024a）。
 
 #### D.12 基于 DINOv3 的视觉几何定位 Transformer
 
-**实现细节** 与原始的 VGGT (Wang 等, 2025) 相比，我们进行了以下修改：(1) 使用 592 的图像尺寸而非 518；这是为了匹配 DINOv2 生成的图像块（patch）标记（tokens）数量；(2) 采用更小的学习率，具体从 0.0002 降至 0.0001；(3) 使用 DINOv3 ViT-L 的四个中间层特征的拼接结果作为下游模块的输入，而不是仅使用最后一层。有趣的是，我们发现使用四个中间层对 DINOv3 有益，而对 DINOv2 进行同样的操作并未带来额外的性能提升。我们还尝试了一个更接近原始 VGGT 设置的版本（图像尺寸 512，相同学习率，仅使用最后一层），即使未经充分调优，该版本在所有测试基准上也已优于原始的 VGGT 工作。
+**实现细节**  
+与原始的 VGGT (Wang 等, 2025) 相比，我们进行了以下修改：(1) 使用 592 的图像尺寸而非 518；这是为了匹配 DINOv2 生成的图像块（patch）标记（tokens）数量；(2) 采用更小的学习率，具体从 0.0002 降至 0.0001；(3) 使用 DINOv3 ViT-L 的四个中间层特征的拼接结果作为下游模块的输入，而不是仅使用最后一层。有趣的是，我们发现使用四个中间层对 DINOv3 有益，而对 DINOv2 进行同样的操作并未带来额外的性能提升。我们还尝试了一个更接近原始 VGGT 设置的版本（图像尺寸 512，相同学习率，仅使用最后一层），即使未经充分调优，该版本在所有测试基准上也已优于原始的 VGGT 工作。
 
 #### D.13 地理空间任务
 
-**评估细节** 在所有评估中，我们保持骨干网络冻结，仅训练针对特定任务的轻量级分类器或解码器。对于 GEO-Bench 分类任务，我们使用 SGD 优化器，在 2400 次迭代内训练一个线性分类器，批量大小为 32，采用余弦学习率衰减，并在 1e−5 到 1 的范围内选择最佳学习率。除非另有说明，分割评估使用 DPT 解码器 (Ranftl 等, 2021)，学习率通过在验证集上的网格搜索从四个值 $\{3e-5, 1e-4, 3e-4, 1e-3\}$ 中选择最优。
+**评估细节** 
+在所有评估中，我们保持骨干网络冻结，仅训练针对特定任务的轻量级分类器或解码器。对于 GEO-Bench 分类任务，我们使用 SGD 优化器，在 2400 次迭代内训练一个线性分类器，批量大小为 32，采用余弦学习率衰减，并在 1e−5 到 1 的范围内选择最佳学习率。除非另有说明，分割评估使用 DPT 解码器 (Ranftl 等, 2021)，学习率通过在验证集上的网格搜索从四个值 $\{3e-5, 1e-4, 3e-4, 1e-3\}$ 中选择最优。
 
 在 LoveDA 和 iSAID 数据集上，我们训练一个 UPerNet 解码器 (Xiao 等, 2018)，共 80k 次迭代，批量大小为 8，并采用 1500 次迭代的线性预热，与 (Wang 等, 2024a) 保持一致。所有其他超参数（如裁剪尺寸和权重衰减）均与 (Wang 等, 2024a) 相同。遵循先前的工作 (Tolan 等, 2024; Wang 等, 2022a)，我们使用 DPT 头部进行树冠高度预测评估，并为对象检测任务训练一个 Faster RCNN 检测器 (Ren 等, 2015)，共 12 个训练周期。
 
-**Satlidar 数据集** Satlidar 数据集包含一百万张 512 $\times$ 512 的 Maxar 卫星图像及其对应的密集激光雷达（lidar）测量数据，这些数据来自不同地理位置，具体如表 28 所述。这些图像是从更大的图块中提取的，每个子数据集的图块数量在表中已注明。
+**Satlidar 数据集**  
+Satlidar 数据集包含一百万张 512 $\times$ 512 的 Maxar 卫星图像及其对应的密集激光雷达（lidar）测量数据，这些数据来自不同地理位置，具体如表 28 所述。这些图像是从更大的图块中提取的，每个子数据集的图块数量在表中已注明。
 
 **表 28：Satlidar 数据集描述。**
+<table>
+<tr><td>Subdataset</td><td>Path</td><td>Amount of tiles</td><td>Purpose</td></tr>
+<tr><td>Kalimantan</td><td>https://daac.ornl.gov/cgi-bin/dsviewer.pl?ds_id=1540</td><td>86</td><td>train/val/test</td></tr>
+<tr><td>OpenDC</td><td>https://opendata.dc.gov/datasets/2020-lidar-classified-las/about</td><td>68</td><td>train/val/test</td></tr>
+<tr><td>Brazil</td><td>https://daac.ornl.gov/cgi-bin/dsviewer.pl?ds_id=1644</td><td>37</td><td>train/val/test</td></tr>
+<tr><td>Mozambique</td><td>https://daac.ornl.gov/cgi-bin/dsviewer.pl?ds_id=1521</td><td>144</td><td>train/val/test</td></tr>
+<tr><td>Neon</td><td>https://data.neonscience.org/data-products/DP3.30o15.001</td><td>5366</td><td>train/val/test</td></tr>
+<tr><td>CA20Graup</td><td>https://portal.opentopography.org/datasetMetadata?otCollectionID=0T.092021.6339.1</td><td>99</td><td>train/val/test</td></tr>
+<tr><td>CA17Duvall</td><td> https:/portal.0pentopography.0rg/datasetMetadata?otCollctionID=0T.042020.6339.2</td><td>56</td><td>train/val/test</td></tr>
+<tr><td>Netherlands</td><td>https://geotiles.citg.tudelft.nl/</td><td>13</td><td>train/val/test</td></tr>
+<tr><td>Sao Paulo</td><td>https://daac.ornl.gov/CMS/guides/LiDAR_Forest_Inventory_Brazil.html</td><td>4</td><td>test</td></tr>
+<tr><td>CA brande</td><td>https://doi.org/10.5069/G9C53J18</td><td>1</td><td>test</td></tr>
+</table>
