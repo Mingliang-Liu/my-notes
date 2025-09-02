@@ -869,7 +869,7 @@ Darcet 等（2024）发现，图像块异常值会负面影响 DINOv2 的性能�
 An 等（2025）的近期研究探讨了在不同大语言模型及其架构中出现的异常值问题。作者分析了多种类型的异常值，并发现它们与注意力机制存在内在关联。他们提出了多种缓解方案，其中我们选择了两个看起来较为有效且对注意力机制改动最小的策略：显式固定偏置（我们称之为“值门控”，value gating）和注意力偏置（attention bias）策略。值门控策略的核心是在注意力输出中加入一个可学习的值偏置 $\mathbf{v}' \in \mathbb{R}^{d}$，具体通过重新定义注意力机制实现：
 
 $$
-\operatorname{Attn}(Q,K,V;\mathbf{k}^{\prime},\mathbf{v}^{\prime})=\mathrm{softmax}(\frac{Q[K^{T}]}{\sqrt{d}})V+\mathbf{v}^{\prime}, (4)
+\mathrm{Attn}(Q,K,V;\mathbf{k}^{\prime},\mathbf{v}^{\prime})=\mathrm{softmax}(\frac{Q[K^{T}]}{\sqrt{d}})V+\mathbf{v}^{\prime}, (4)
 $$
 
 其中 $Q, K, V \in \mathbb{R}^{T \times d}$ 分别为查询（query）、键（key）和值（value）矩阵，$d$ 为隐空间的维度。  
@@ -877,7 +877,7 @@ $$
 或者，如公式5中定义的注意力偏置（attention bias），通过在键和值矩阵中分别引入两个可学习的偏置项 $\mathbf{k}^{\prime}, \mathbf{v}^{\prime} \in \mathbb{R}^{d}$ 来实现。其定义如下：
 
 $$
-\operatorname{Attn}(Q,K,V;\mathbf{k}^{\prime},\mathbf{v}^{\prime})=\mathrm{softmax}(\frac{Q[K^{T}\mathbf{k}^{\prime}]}{\sqrt{d}})\left[\mathbf{v}^{\prime}\right] .(5)
+\mathrm{Attn}(Q,K,V;\mathbf{k}^{\prime},\mathbf{v}^{\prime})=\mathrm{softmax}(\frac{Q[K^{T}\mathbf{k}^{\prime}]}{\sqrt{d}})\left[\mathbf{v}^{\prime}\right] .(5)
 $$
 
 从图20a中我们观察到，值门控（value gating）策略显著改变了patch范数的分布，导致总体范数值更高，并消除了明显的离群值。尽管注意力机制缓解了高范数token的存在，但并未完全解决该问题，因为在与我们使用寄存器token（register tokens）的结果相比时，仍有一些高范数的patches持续存在——如第一行图像所示。值得注意的是，加入寄存器tokens后取得了最佳性能，因此我们在本文报告的所有实验中均采用此策略。
